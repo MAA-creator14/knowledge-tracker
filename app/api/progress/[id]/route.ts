@@ -3,11 +3,12 @@ import { prisma } from '@/lib/db/client'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const progressUpdate = await prisma.progressUpdate.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { topic: true }
     })
     
@@ -19,14 +20,14 @@ export async function DELETE(
     }
     
     await prisma.progressUpdate.delete({
-      where: { id: params.id }
+      where: { id }
     })
     
     // Create activity log
     await prisma.activityLog.create({
       data: {
         entityType: 'progress',
-        entityId: params.id,
+        entityId: id,
         action: 'deleted',
         topicId: progressUpdate.topicId,
         details: {

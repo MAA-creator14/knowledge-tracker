@@ -6,10 +6,11 @@ import TopicDetail from '@/components/topics/TopicDetail'
 export default async function TopicDetailPage({
   params
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const topic = await prisma.topic.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       resources: {
         orderBy: { order: 'asc' }

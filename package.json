@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run db:generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -16,7 +16,7 @@
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^5.19.0",
     "date-fns": "^3.6.0",
-    "next": "^14.2.0",
+    "next": "^16.1.1",
     "prisma": "^5.19.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

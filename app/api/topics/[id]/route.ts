@@ -4,11 +4,12 @@ import { Priority } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const topic = await prisma.topic.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         resources: {
           orderBy: { order: 'asc' }
@@ -38,9 +39,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const {
       title,
@@ -53,7 +55,7 @@ export async function PUT(
     } = body
     
     const topic = await prisma.topic.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title,
         description: description !== undefined ? description : undefined,
@@ -90,11 +92,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const topic = await prisma.topic.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
     
     if (!topic) {
@@ -105,14 +108,14 @@ export async function DELETE(
     }
     
     await prisma.topic.delete({
-      where: { id: params.id }
+      where: { id }
     })
     
     // Create activity log
     await prisma.activityLog.create({
       data: {
         entityType: 'topic',
-        entityId: params.id,
+        entityId: id,
         action: 'deleted',
         details: { title: topic.title }
       }
