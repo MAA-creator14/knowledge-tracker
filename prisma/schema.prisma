@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum ResourceType {
+  book
+  course
+  article
+  video
+  other
+}
+
+enum ResourceStatus {
+  not_started
+  in_progress
+  completed
+}
+
+enum EntityType {
+  topic
+  resource
+  progress
+}
+
+enum Action {
+  created
+  updated
+  deleted
+  completed
+  status_changed
+}
+
+model Topic {
+  id                 String    @id @default(uuid())
+  title              String
+  description        String?
+  currentProficiency Int       @default(1) @db.SmallInt
+  targetProficiency  Int       @default(10) @db.SmallInt
+  category           String?
+  priority           Priority? @default(medium)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  startedLearningAt  DateTime? @map("started_learning_at")
+
+  resources      Resource[]
+  progressUpdates ProgressUpdate[]
+  activityLogs   ActivityLog[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([category])
+  @@map("topics")
+}
+
+model Resource {
+  id          String         @id @default(uuid())
+  topicId     String         @map("topic_id")
+  title       String
+  url         String?
+  type        ResourceType   @default(other)
+  status      ResourceStatus @default(not_started)
+  notes       String?
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  startedAt   DateTime?      @map("started_at")
+  completedAt DateTime?      @map("completed_at")
+
+  topic        Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  activityLogs ActivityLog[]
+
+  @@index([topicId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([completedAt])
+  @@map("resources")
+}
+
+model ProgressUpdate {
+  id             String    @id @default(uuid())
+  topicId        String    @map("topic_id")
+  proficiencyLevel Int     @map("proficiency_level") @db.SmallInt
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  learningDate   DateTime? @map("learning_date") @db.Date
+
+  topic        Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  activityLogs ActivityLog[]
+
+  @@index([topicId])
+  @@index([createdAt])
+  @@index([learningDate])
+  @@map("progress_updates")
+}
+
+model ActivityLog {
+  id         String     @id @default(uuid())
+  entityType EntityType @map("entity_type")
+  entityId   String     @map("entity_id")
+  action     Action
+  details    Json?
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  topicId   String?  @map("topic_id")
+  topic     Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  resourceId String? @map("resource_id")
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  progressUpdateId String? @map("progress_update_id")
+  progressUpdate   ProgressUpdate? @relation(fields: [progressUpdateId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+
